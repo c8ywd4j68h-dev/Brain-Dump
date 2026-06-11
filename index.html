@@ -435,8 +435,13 @@ async function sortTasks() {
       body: JSON.stringify({ text })
     });
     const data = await res.json();
-    const raw = data.content.map(i => i.text||'').join('');
-    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    if (!data || !data.content) {
+  out.innerHTML = '<p class="status-msg">Error: ' + (data && data.error ? data.error.message : 'No response from API') + '</p>';
+  btn.disabled = false;
+  btn.textContent = 'Sort it out';
+  return;
+}
+const raw = data.content.map(i => i.text||'').join('');    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
     lastCategories = parsed.categories;
     renderCategories(parsed.categories);
   } catch(e) {
