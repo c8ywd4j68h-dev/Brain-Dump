@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brain Dump</title>
+<style>
+  :root {
+    --r: #E24B4A;
+    --o: #EF9F27;
+    --y: #c9c400;
+    --g: #639922;
+    --t: #1D9E75;
+    --b: #378ADD;
+    --p: #7F77DD;
+    --pk: #D4537E;
+    --bg: #0e0e0e;
+    --surface: #181818;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0f0f0;
+    --muted: rgba(255,255,255,0.4);
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+  }
+
+  .rainbow-bar {
+    height: 3px;
+    background: linear-gradient(90deg, var(--r), var(--o), var(--y), var(--g), var(--t), var(--b), var(--p), var(--pk));
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+  }
+
+  header {
+    padding: 2rem 1.5rem 1rem;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    background: linear-gradient(90deg, var(--r), var(--o), var(--y), var(--g), var(--t), var(--b), var(--p), var(--pk));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.25rem;
+  }
+
+  .subtitle {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  main {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    padding-bottom: 6rem;
+  }
+
+  .mode-tabs {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px;
+    margin-bottom: 1.5rem;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 8px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+  }
+
+  .tab.active {
+    color: var(--text);
+    background: rgba(255,255,255,0.07);
+  }
+
+  #sort-mode textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1.6;
+    padding: 1rem;
+    resize: vertical;
+    min-height: 140px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+
+  #sort-mode textarea:focus { border-color: rgba(255,255,255,0.2); }
+  #sort-mode textarea::placeholder { color: var(--muted); }
+
+  .sort-btn {
+    margin-top: 0.75rem;
+    width: 100%;
+    padding: 0.875rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    background: linear-gradient(90deg, var(--r), var(--o), var(--y), var(--g), var(--t), var(--b), var(--p), var(--pk));
+    color: #fff;
+    letter-spacing: -0.01em;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .sort-btn:hover { opacity: 0.9; }
+  .sort-btn:active { transform: scale(0.99); }
+  .sort-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+  .legend {
+    display: flex; gap: 1rem; margin-top: 0.75rem; margin-bottom: 1.25rem;
+    font-size: 0.75rem; color: var(--muted);
+  }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+  .categories { display: flex; flex-direction: column; gap: 10px; }
+
+  .cat-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .cat-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cat-pill {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .cat-count { margin-left: auto; font-size: 0.75rem; color: var(--muted); }
+
+  .task-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 0.6rem 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.85);
+  }
+
+  .task-item:first-of-type { border-top: none; }
+  .urgent-dot { background: var(--r); }
+  .normal-dot { background: rgba(255,255,255,0.2); }
+
+  .copy-bar { display: flex; justify-content: flex-end; margin-top: 1rem; }
+
+  .copy-btn {
+    padding: 0.6rem 1.25rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    transition: background 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .copy-btn:hover { background: rgba(255,255,255,0.07); }
+  .copied { color: #3ed9a2; border-color: #1D9E75; }
+
+  .status-msg { text-align: center; color: var(--muted); font-size: 0.875rem; padding: 2rem 0; }
+
+  #capture-mode { display: none; }
+
+  .capture-input-row { display: flex; gap: 8px; }
+
+  #capture-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+
+  #capture-input:focus { border-color: rgba(255,255,255,0.2); }
+  #capture-input::placeholder { color: var(--muted); }
+
+  .add-btn {
+    padding: 0.75rem 1rem;
+    font-size: 1.25rem;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--p), var(--b));
+    color: #fff;
+    transition: opacity 0.15s;
+    line-height: 1;
+  }
+
+  .add-btn:hover { opacity: 0.85; }
+
+  .captured-list { margin-top: 1rem; display: flex; flex-direction: column; gap: 6px; }
+
+  .captured-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.875rem;
+    font-size: 0.9rem;
+  }
+
+  .captured-item .bullet { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  .captured-item .del-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+
+  .captured-item .del-btn:hover { color: var(--r); }
+
+  .capture-actions { margin-top: 1rem; display: flex; gap: 8px; }
+
+  .sort-captured-btn {
+    flex: 1;
+    padding: 0.875rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    background: linear-gradient(90deg, var(--r), var(--o), var(--y), var(--g), var(--t), var(--b), var(--p), var(--pk));
+    color: #fff;
+    transition: opacity 0.15s;
+  }
+
+  .sort-captured-btn:disabled { opacity: 0.4; cursor: default; }
+  .sort-captured-btn:hover:not(:disabled) { opacity: 0.9; }
+
+  .clear-btn {
+    padding: 0.875rem 1rem;
+    font-size: 0.85rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--muted);
+    transition: color 0.15s;
+  }
+
+  .clear-btn:hover { color: var(--r); border-color: var(--r); }
+
+  .empty-capture { text-align: center; color: var(--muted); font-size: 0.875rem; padding: 2rem 0; }
+
+  .rb0 { background: var(--r); } .rb1 { background: var(--o); } .rb2 { background: var(--y); }
+  .rb3 { background: var(--g); } .rb4 { background: var(--t); } .rb5 { background: var(--b); }
+  .rb6 { background: var(--p); } .rb7 { background: var(--pk); }
+
+  .cc-red    { background: rgba(226,75,74,0.15);  color: #ff8a89; border-color: rgba(226,75,74,0.3); }
+  .cc-orange { background: rgba(239,159,39,0.15); color: #ffc96a; border-color: rgba(239,159,39,0.3); }
+  .cc-yellow { background: rgba(201,196,0,0.12);  color: #e0db4f; border-color: rgba(201,196,0,0.3); }
+  .cc-green  { background: rgba(99,153,34,0.15);  color: #8fcc45; border-color: rgba(99,153,34,0.3); }
+  .cc-teal   { background: rgba(29,158,117,0.15); color: #3ed9a2; border-color: rgba(29,158,117,0.3); }
+  .cc-blue   { background: rgba(55,138,221,0.15); color: #72b8f5; border-color: rgba(55,138,221,0.3); }
+  .cc-purple { background: rgba(127,119,221,0.15);color: #b0a9f5; border-color: rgba(127,119,221,0.3); }
+  .cc-pink   { background: rgba(212,83,126,0.15); color: #f589b0; border-color: rgba(212,83,126,0.3); }
+
+  @media (max-width: 400px) {
+    h1 { font-size: 1.6rem; }
+    main { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rainbow-bar"></div>
+
+<header>
+  <h1>Brain Dump</h1>
+  <p class="subtitle">Dump it. Sort it. Copy it.</p>
+</header>
+
+<main>
+  <div class="mode-tabs">
+    <button class="tab active" id="tab-sort" onclick="switchTab('sort')">⚡ Sort now</button>
+    <button class="tab" id="tab-capture" onclick="switchTab('capture')">+ Capture</button>
+  </div>
+
+  <div id="sort-mode">
+    <textarea id="dump" placeholder="e.g. reply to sarah, fix the matching bug, write module 3, post something this week, call mum"></textarea>
+    <button class="sort-btn" id="sort-btn" onclick="sortTasks()">Sort it out</button>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--r)"></span> urgent</span>
+      <span><span class="dot" style="background:rgba(255,255,255,0.2)"></span> normal</span>
+    </div>
+    <div id="sort-output"></div>
+  </div>
+
+  <div id="capture-mode">
+    <div class="capture-input-row">
+      <input type="text" id="capture-input" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addCapture()" />
+      <button class="add-btn" onclick="addCapture()">+</button>
+    </div>
+    <div id="captured-list" class="captured-list"></div>
+    <div class="capture-actions" id="capture-actions" style="display:none">
+      <button class="sort-captured-btn" onclick="sortCaptured()">Sort all ↗</button>
+      <button class="clear-btn" onclick="clearCapture()">Clear</button>
+    </div>
+    <div id="capture-empty" class="empty-capture">Nothing captured yet. Start adding tasks above.</div>
+  </div>
+</main>
+
+<script>
+let capturedTasks = [];
+let lastCategories = null;
+
+const colorMap = {
+  red:'cc-red', orange:'cc-orange', yellow:'cc-yellow', green:'cc-green',
+  teal:'cc-teal', blue:'cc-blue', purple:'cc-purple', pink:'cc-pink',
+  coral:'cc-pink', amber:'cc-orange'
+};
+
+function switchTab(tab) {
+  document.getElementById('tab-sort').classList.toggle('active', tab==='sort');
+  document.getElementById('tab-capture').classList.toggle('active', tab==='capture');
+  document.getElementById('sort-mode').style.display = tab==='sort' ? 'block' : 'none';
+  document.getElementById('capture-mode').style.display = tab==='capture' ? 'block' : 'none';
+}
+
+function addCapture() {
+  const inp = document.getElementById('capture-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  capturedTasks.push(val);
+  inp.value = '';
+  renderCaptured();
+  inp.focus();
+}
+
+function removeCapture(i) {
+  capturedTasks.splice(i, 1);
+  renderCaptured();
+}
+
+function clearCapture() {
+  capturedTasks = [];
+  renderCaptured();
+}
+
+function renderCaptured() {
+  const list = document.getElementById('captured-list');
+  const actions = document.getElementById('capture-actions');
+  const empty = document.getElementById('capture-empty');
+  if (!capturedTasks.length) {
+    list.innerHTML = '';
+    actions.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  actions.style.display = 'flex';
+  list.innerHTML = capturedTasks.map((t,i) => `
+    <div class="captured-item">
+      <span class="bullet rb${i%8}"></span>
+      <span>${t}</span>
+      <button class="del-btn" onclick="removeCapture(${i})" aria-label="Remove">×</button>
+    </div>
+  `).join('');
+}
+
+function sortCaptured() {
+  const text = capturedTasks.join(', ');
+  switchTab('sort');
+  document.getElementById('dump').value = text;
+  sortTasks();
+}
+
+async function sortTasks() {
+  const text = document.getElementById('dump').value.trim();
+  if (!text) return;
+  const btn = document.getElementById('sort-btn');
+  const out = document.getElementById('sort-output');
+  btn.disabled = true;
+  btn.textContent = 'Sorting...';
+  out.innerHTML = '<p class="status-msg">Thinking...</p>';
+  lastCategories = null;
+
+  try {
+    const res = await fetch('/.netlify/functions/sort', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+    const raw = data.content.map(i => i.text||'').join('');
+    const parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    lastCategories = parsed.categories;
+    renderCategories(parsed.categories);
+  } catch(e) {
+    out.innerHTML = '<p class="status-msg">Something went wrong. Try again.</p>';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Sort it out';
+}
+
+function renderCategories(cats) {
+  const out = document.getElementById('sort-output');
+  if (!cats||!cats.length) { out.innerHTML = '<p class="status-msg">No tasks found.</p>'; return; }
+  let html = '<div class="categories">';
+  cats.forEach(cat => {
+    const cc = colorMap[cat.color] || 'cc-purple';
+    html += `<div class="cat-card">
+      <div class="cat-header">
+        <span class="cat-pill ${cc}">${cat.name}</span>
+        <span class="cat-count">${cat.tasks.length} task${cat.tasks.length!==1?'s':''}</span>
+      </div>`;
+    cat.tasks.forEach(t => {
+      html += `<div class="task-item"><span class="dot ${t.urgent?'urgent-dot':'normal-dot'}"></span><span>${t.text}</span></div>`;
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  html += `<div class="copy-bar"><button class="copy-btn" id="copy-btn" onclick="copyTasks()">📋 Copy all tasks</button></div>`;
+  out.innerHTML = html;
+}
+
+function copyTasks() {
+  if (!lastCategories) return;
+  const text = lastCategories.map(cat => {
+    const tasks = cat.tasks.map(t => `- ${t.urgent?'[URGENT] ':''}${t.text}`).join('\n');
+    return `${cat.name.toUpperCase()}\n${tasks}`;
+  }).join('\n\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Copy all tasks';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+</script>
+</body>
+</html>
