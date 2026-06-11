@@ -440,7 +440,7 @@ async function sortTasks() {
     lastCategories = parsed.categories;
     renderCategories(parsed.categories);
   } catch(e) {
-    out.innerHTML = '<p class="status-msg">Something went wrong. Try again.</p>';
+   out.innerHTML = '<p class="status-msg">Error: ' + e.message + '</p>';
   }
 
   btn.disabled = false;
