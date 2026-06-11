@@ -7,6 +7,14 @@ exports.handler = async (event) => {
 
   try {
     const { text } = JSON.parse(event.body);
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+
+    if (!apiKey) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: { message: 'API key not configured' } })
+      };
+    }
 
     const result = await new Promise((resolve, reject) => {
       const body = JSON.stringify({
@@ -27,14 +35,17 @@ Respond ONLY with valid JSON, no markdown, no backticks:
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
           'Content-Length': Buffer.byteLength(body)
         }
       }, (res) => {
         let data = '';
         res.on('data', chunk => data += chunk);
-        res.on('end', () => resolve(JSON.parse(data)));
+        res.on('end', () => {
+          try { resolve(JSON.parse(data)); }
+          catch(e) { reject(new Error('Invalid JSON from API: ' + data)); }
+        });
       });
 
       req.on('error', reject);
@@ -50,7 +61,7 @@ Respond ONLY with valid JSON, no markdown, no backticks:
   } catch (err) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: err.message })
+      body: JSON.stringify({ error: { message: err.message } })
     };
   }
 };
