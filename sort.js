@@ -14,7 +14,7 @@ exports.handler = async (event) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 1000,
         system: `You are a task sorter. Sort the user's brain dump into 2-5 categories that fit the actual content.
 Use category names like: Work, Personal, Comms, Creative, Admin, Game Dev, Health, Music — whatever fits.
